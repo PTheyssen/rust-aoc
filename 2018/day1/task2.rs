@@ -16,7 +16,6 @@ fn main () {
     'outer: loop {
         for x in v.iter() {
             counter = counter + x;
-            // println!("Counter: {}\n", counter);
             if seen.contains(&counter) {
                 println!("Solution is: {}", counter);
                 break 'outer;
