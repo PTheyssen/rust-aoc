@@ -11,8 +11,9 @@ use nom::{
 use std::collections::HashSet;
 
 
-#[derive(Debug,PartialEq)]
+#[derive(Debug,PartialEq,Clone)]
 pub struct Claim {
+    pub claim_id:    i32,
     pub left_edge:   i32,
     pub top_edge:    i32,
     pub width:       i32,
@@ -21,9 +22,10 @@ pub struct Claim {
 
 fn main () {
     task1();
+    task2();
 }
 
-fn task1() {
+fn task1() -> HashSet<(i32,i32)> {
     let contents = fs::read_to_string("input/day3.txt")
         .expect("Failed reading input");
 
@@ -49,6 +51,31 @@ fn task1() {
         }
     }
     println!("Solution day3, task1: {}", seen_twice.len());
+    seen_twice
+}
+
+fn task2() {
+    // simply look for claim that does not have a single pair
+    // in seen_twice set
+    let seen_twice = task1();
+    let contents = fs::read_to_string("input/day3.txt")
+        .expect("Failed reading input");
+    let claims: Vec<&str> = contents.split_terminator('\n')
+        .collect();
+
+    for claim in claims {
+        let mut special_claim = true;
+        let parse_result = parse_claim(claim);
+        let parsed_claim = parse_result.unwrap().1;
+        for p in generate_pairs(parsed_claim.clone()) {
+            if seen_twice.contains(&p) {
+                special_claim = false;
+            }
+        }
+        if special_claim {
+            println!("Found special claim: {}", parsed_claim.claim_id);
+        }
+    }
 }
 
 fn generate_pairs(claim: Claim) -> Vec<(i32, i32)> {
@@ -70,7 +97,7 @@ fn generate_pairs(claim: Claim) -> Vec<(i32, i32)> {
 /// Claim {left_edge = 608, top_edge = 593, width = 17, height = 20}
 fn parse_claim(input: &str) -> IResult<&str, Claim> {
     let (input, _) = tag("#")(input)?;
-    let (input, _claim_id) = map_res(
+    let (input, claim_id) = map_res(
         recognize(
             many1(
                 terminated(one_of("0123456789"), many0(char('_')))
@@ -110,7 +137,7 @@ fn parse_claim(input: &str) -> IResult<&str, Claim> {
         |out: &str| i32::from_str_radix(out, 10)
     )(input)?;
 
-    Ok((input, Claim {left_edge, top_edge, width, height}))
+    Ok((input, Claim {claim_id, left_edge, top_edge, width, height}))
 }
 
 
